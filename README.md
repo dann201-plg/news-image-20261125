@@ -6,6 +6,8 @@
 
 A 1024x1024 summary of Wednesday 25 November 2026 in one image: 50 date-verified stories (1 main, 4 featured, 45 one-liners) across 7 regions and 8 fields, drawn by a deterministic Python generator. Illustrated hero icons, a schematic world map with story locations, a day-in-numbers strip, and an explicit date-check box. Every story was verified against wire-level sources (Reuters/WSJ/AFP) as having happened or first been reported on 25 November 2026; stories from 23-24 November were deliberately left out and are named in the date check.
 
+Verified: running the generator twice produces byte-identical PNGs (sha256 `2322e7072c59bdd5db58f244cc7d84002c64117f091d2e840ca0464f54960278`).
+
 ## Run it
 
 ```sh
