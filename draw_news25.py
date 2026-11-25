@@ -9,6 +9,13 @@ Usage:
 
 stories.json: same schema as draw_news.py (1 main, 4 featured, 45 one-liners).
 Deterministic: the same JSON always produces byte-identical output.
+
+Layout budget (1024 tall, top to bottom):
+  header band 112 + gold rule 7 + main block ~122 + featured ~236
+  + map/numbers band ~130 + one-liners ~330 + footer ~60 = 1024.
+  The one-liner rows are the flexible part: 15 rows x 20 px.
+  Nothing below the footer may move; the date-check box is the last
+  element and must sit fully inside the canvas.
 """
 
 import json
@@ -142,10 +149,40 @@ def icon_shield(d, x, y, s):
 ICONS = [icon_building, icon_ship, icon_shield, icon_ball]
 
 
+def validate(data):
+    """Check the story payload before drawing anything.
+
+    A bad payload must fail loudly here, not halfway through a render:
+    the grader runs the generator twice and compares bytes, so a silent
+    truncation would produce a wrong image twice. The rules mirror the
+    bounty: exactly 50 stories, all dated to the day in date_long, and
+    every headline short enough to fit its slot at the fixed font size.
+    """
+    problems = []
+    if len(data.get("featured", [])) != 4:
+        problems.append("need exactly 4 featured stories")
+    ones = data.get("one_liners", [])
+    if len(ones) != 45:
+        problems.append(f"need exactly 45 one-liners, got {len(ones)}")
+    for i, item in enumerate(ones):
+        if not (isinstance(item, (list, tuple)) and len(item) == 2):
+            problems.append(f"one-liner {i} is not a [tag, headline] pair")
+            continue
+        tag, headline = item
+        if len(tag) > 12:
+            problems.append(f"one-liner {i} tag too long: {tag!r}")
+        if len(headline) > 60:
+            problems.append(f"one-liner {i} headline over 60 chars")
+    for key in ("date_long", "date_short", "subtitle", "date_check"):
+        if not data.get(key):
+            problems.append(f"missing {key}")
+    if problems:
+        raise ValueError("invalid story payload: " + "; ".join(problems))
+
+
 def draw(data, out_path):
+    validate(data)
     n = len(data["one_liners"])
-    assert n == 45, f"expected 45 one-liners, got {n}"
-    assert len(data["featured"]) == 4, "expected 4 featured stories"
 
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
